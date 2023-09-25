@@ -10,31 +10,35 @@ foods_schema = FoodSchema(many=True)
 def add_get_foods():
     if request.method == "POST":
        
+        food_id = request.json.get("id")
         foods_title = request.json.get("title")
         foods_description = request.json.get("description")
         foods_picture = request.json.get("picture")
         foods_ingredients = request.json.get("ingredients")
-        foods_category = request.json.get("category")
-        foods_related = request.json.get("related")
-        foods_وصف = request.json.get("وصف")
+        
+        
+        existing_food = Food.query.get(food_id)
 
-        new_food = Food(
-            title=foods_title,
-            description=foods_description,
-            picture=foods_picture,
-            ingredients=foods_ingredients,
-            category=foods_category,
-            related=foods_related,
-            وصف=foods_وصف
-        )
+        if existing_food:
+            existing_food.title = foods_title
+            existing_food.description = foods_description
+            existing_food.picture = foods_picture
+            existing_food.ingredients = foods_ingredients
+        else:
+            
+            new_food = Food(
+                id=food_id,  
+                title=foods_title,
+                description=foods_description,
+                picture=foods_picture,
+                ingredients=foods_ingredients,
+            )
+            db.session.add(new_food)
 
-       
-        db.session.add(new_food)
         db.session.commit()
 
-        
         response_data = {
-            "message": "تم انشاء القائمة",
+            "message": "created succefuly",
         }
         json_data = json.dumps(response_data, ensure_ascii=False)
         response = Response(json_data, content_type='application/json; charset=utf-8')
@@ -50,9 +54,7 @@ def add_get_foods():
             "description": food.description,
             "picture": food.picture,
             "ingredients": food.ingredients,
-            "category": food.category,
-            "related": food.related,
-            "وصف": food.وصف
+            
         })
 
     
@@ -63,27 +65,30 @@ def add_get_foods():
 
 
 def update_foods(food_id):
+    
+    foods_title = request.json["title"]
+    foods_description = request.json.get("description")
+    foods_picture = request.json.get("picture")
+    foods_ingredients = request.json.get("ingredients")
+
     food = Food.query.get(food_id)
-  
-    if food:
-         
-        foods_title = request.json["title"]
-        foods_description = request.json.get("description", food.description)  
-        foods_picture = request.json.get("picture", food.picture)  
-        foods_ingredients=request.json.get("ingredients")
-        foods_category=request.json.get("category")
-        foods_related=request.json.get("related")
-        foods_وصف=request.json.get("وصف")
+
+    if not food:
         
-        food.title = foods_title
-        food.description = foods_description
-        food.picture = foods_picture
-        food.ingredients=foods_ingredients
-        food.category=foods_category
-        food.related =foods_related
-        food.وصف=foods_وصف
-        db.session.commit()
-        return jsonify({"message": "تم تغيير القائمة"}), 200
+        return jsonify({"message": "Food not found"}), 404
+
+    
+    food.title = foods_title
+    food.description = foods_description
+    food.picture = foods_picture
+    food.ingredients = foods_ingredients
+
+    
+    db.session.commit()
+
+    
+    return jsonify({"message": "update succefuly"}), 200
+
 
  
 def get_foods(food_id):
@@ -95,9 +100,7 @@ def get_foods(food_id):
             "description": food.description,
             "picture": food.picture,
             "ingredients": food.ingredients,
-            "category": food.category,
-            "related": food.related,
-            "وصف": food.وصف
+            
         })
 
 
@@ -107,4 +110,4 @@ def delete_foods(food_id):
         
         db.session.delete(food)
         db.session.commit()
-        return jsonify({"message": "تم ازالة القائمة"}), 200
+        return jsonify({"message": "delete succefuly"}), 200
